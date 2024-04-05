@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+data:
+  host : "10.102.202.13"   #mysql-service cluster ip
+  dbName: "dropshipping_db"
+  port: "3306"

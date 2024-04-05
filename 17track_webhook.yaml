@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 17track-webhook-deployment
+  labels:
+    app: 17track-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: 17track-webhook
+  template:
+    metadata:
+      labels:
+        app: 17track-webhook
+    spec:
+      imagePullSecrets:
+      - name: regcred
+      containers:
+      - name: 17track-webhook
+        image: surajm2w/servicepoints:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 90
+        env:
+        - name: USER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user-pass
+              key: username
+        - name: USER_PWD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-user-pass
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: dbName
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: host
+        - name: DB_PORT	
+          valueFrom:
+            configMapKeyRef:
+              name: mysql-config
+              key: port
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: mongo-root-username
+        - name: MONGO_INITDB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongo-creds
+              key: mongo-root-password
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: host
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: redis-config
+              key: port
+        startupProbe:
+          tcpSocket:
+            port: 90
+          initialDelaySeconds: 10
+          periodSeconds: 5      
+      
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhook-17track-service
+spec:
+  type: NodePort
+  selector:
+    app: 17track-webhook
+  ports:
+    - protocol: TCP
+      port: 90
+      targetPort: 90
+      nodePort: 30105

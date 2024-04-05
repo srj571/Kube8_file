@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+   name: mongodb-deployment
+spec:
+   replicas: 1
+   selector:
+      matchLabels:
+        app: mongo-db
+   strategy:
+     type: Recreate
+   template:
+     metadata:
+       labels:
+         app: mongo-db
+     spec:
+       containers:
+       - name: mongo-db
+         image: mongo:5.0
+         env:
+         - name: MONGO_INITDB_ROOT_USERNAME
+           valueFrom:
+             secretKeyRef:
+               name: mongo-creds
+               key: mongo-root-username
+         - name: MONGO_INITDB_ROOT_PASSWORD
+           valueFrom:
+             secretKeyRef:
+               name: mongo-creds
+               key: mongo-root-password
+         imagePullPolicy: Always
+         ports:
+           - containerPort: 27017
+             name: mongo-db
+         volumeMounts:
+           - name: mongodb-persistent-storage
+             mountPath: /data/db
+       volumes:
+         - name: mongodb-persistent-storage
+           persistentVolumeClaim:
+             claimName: mongodb-pv-claim
+             
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service
+  labels:
+    app: mongo-db
+spec:
+  selector:
+    app: mongo-db
+  ports:
+  - protocol: TCP
+    port: 27017
+    targetPort: 27017
+    nodePort: 32000
+  type: NodePort

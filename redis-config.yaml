@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: redis-config
+data:
+  #host: "redis-service"  # Use the actual service name
+  host: "192.168.49.2"
+  port: "30300"  # Use the actual Redis port
